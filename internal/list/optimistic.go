@@ -35,17 +35,13 @@ func (l *OptmisticList) Add(item int) bool {
 				curr.mux.Unlock()
 				return false
 			}
-			pred.mux.Unlock()
-			curr.mux.Unlock()
-			pred.mux.RLock()
-			curr.mux.RLock()
 			node := &RWMuxNode{
 				item: item,
 			}
 			node.next = curr
 			pred.next = node
-			pred.mux.RUnlock()
-			curr.mux.RUnlock()
+			pred.mux.Unlock()
+			curr.mux.Unlock()
 			return true
 		}
 		pred.mux.Unlock()
@@ -55,11 +51,11 @@ func (l *OptmisticList) Add(item int) bool {
 
 // Contains is
 func (l *OptmisticList) Contains(item int) bool {
-	pred := l.head
-	curr := pred.next
-
 	for {
-		for curr.item < item {
+		pred := l.head
+		curr := pred.next
+
+		for curr.item <= item {
 			pred = curr
 			curr = curr.next
 		}
@@ -68,7 +64,7 @@ func (l *OptmisticList) Contains(item int) bool {
 		if l.validate(pred, curr) {
 			pred.mux.Unlock()
 			curr.mux.Unlock()
-			return (curr.item == item)
+			return curr.item == item
 		}
 		pred.mux.Unlock()
 		curr.mux.Unlock()
@@ -94,13 +90,9 @@ func (l *OptmisticList) Remove(item int) bool {
 				curr.mux.Unlock()
 				return false
 			}
+			pred.next = curr.next
 			pred.mux.Unlock()
 			curr.mux.Unlock()
-			pred.mux.RLock()
-			curr.mux.RLock()
-			pred.next = curr.next
-			pred.mux.RUnlock()
-			curr.mux.RUnlock()
 			return true
 		}
 		pred.mux.Unlock()

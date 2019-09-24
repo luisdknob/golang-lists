@@ -2,10 +2,10 @@ package list
 
 // OptmisticList definition with Mutex
 type OptmisticList struct {
-	head *MuxNode
+	head *RWMuxNode
 }
 
-func (l *OptmisticList) validate(pred *MuxNode, curr *MuxNode) bool {
+func (l *OptmisticList) validate(pred *RWMuxNode, curr *RWMuxNode) bool {
 	node := l.head
 	for node.item <= pred.item {
 		if node == pred {
@@ -18,7 +18,7 @@ func (l *OptmisticList) validate(pred *MuxNode, curr *MuxNode) bool {
 
 // Add is
 func (l *OptmisticList) Add(item int) bool {
-	var pred, curr *MuxNode
+	var pred, curr *RWMuxNode
 
 	for {
 		pred = l.head
@@ -35,13 +35,17 @@ func (l *OptmisticList) Add(item int) bool {
 				curr.mux.Unlock()
 				return false
 			}
-			node := &MuxNode{
+			pred.mux.Unlock()
+			curr.mux.Unlock()
+			pred.mux.RLock()
+			curr.mux.RLock()
+			node := &RWMuxNode{
 				item: item,
 			}
 			node.next = curr
 			pred.next = node
-			pred.mux.Unlock()
-			curr.mux.Unlock()
+			pred.mux.RUnlock()
+			curr.mux.RUnlock()
 			return true
 		}
 		pred.mux.Unlock()
@@ -73,7 +77,7 @@ func (l *OptmisticList) Contains(item int) bool {
 
 // Remove is
 func (l *OptmisticList) Remove(item int) bool {
-	var pred, curr *MuxNode
+	var pred, curr *RWMuxNode
 
 	for {
 		pred = l.head
@@ -90,9 +94,13 @@ func (l *OptmisticList) Remove(item int) bool {
 				curr.mux.Unlock()
 				return false
 			}
-			pred.next = curr.next
 			pred.mux.Unlock()
 			curr.mux.Unlock()
+			pred.mux.RLock()
+			curr.mux.RLock()
+			pred.next = curr.next
+			pred.mux.RUnlock()
+			curr.mux.RUnlock()
 			return true
 		}
 		pred.mux.Unlock()
@@ -102,9 +110,9 @@ func (l *OptmisticList) Remove(item int) bool {
 
 // NewOptimisticList is
 func NewOptimisticList() (l *OptmisticList) {
-	head := MuxNode{
+	head := RWMuxNode{
 		item: 0,
-		next: &MuxNode{
+		next: &RWMuxNode{
 			item: int(^uint(0) >> 1),
 		},
 	}

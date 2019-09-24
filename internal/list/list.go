@@ -21,3 +21,10 @@ type MuxNode struct {
 	next *MuxNode
 	mux  sync.Mutex
 }
+
+// RWMuxNode is
+type RWMuxNode struct {
+	item int
+	next *RWMuxNode
+	mux  sync.RWMutex
+}

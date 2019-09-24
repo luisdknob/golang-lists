@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -17,7 +16,7 @@ func exec(l list.List, initialSize int, operations int, threads int) {
 	rand.Seed(time.Now().UnixNano())
 	seedSize := 200000
 
-	runtime.GOMAXPROCS(8)
+	//runtime.GOMAXPROCS(8)
 
 	for x := 0; x < initialSize; x++ {
 		var earlyAdd func()
@@ -77,16 +76,16 @@ func exec(l list.List, initialSize int, operations int, threads int) {
 func main() {
 
 	for x := 0; x <= 3; x = x + 1 {
-		lC := list.NewCoarseList()
-		fmt.Printf("CG;%d", x)
-		exec(lC, 100000, 100000, int(math.Pow(2.0, float64(x))))
+		//lC := list.NewCoarseList()
+		//fmt.Printf("CG;%d", x)
+		//exec(lC, 100000, 100000, int(math.Pow(2.0, float64(x))))
 
-		lF := list.NewFineList()
-		fmt.Printf("FG;%d", x)
-		exec(lF, 100000, 100000, int(math.Pow(2.0, float64(x))))
+		//lF := list.NewFineList()
+		//fmt.Printf("FG;%d", x)
+		//exec(lF, 30000, 30000, int(math.Pow(2.0, float64(x))))
 
 		lO := list.NewOptimisticList()
 		fmt.Printf("OP;%d", x)
-		exec(lO, 100000, 100000, int(math.Pow(2.0, float64(x))))
+		exec(lO, 30000, 30000, int(math.Pow(2.0, float64(x))))
 	}
 }

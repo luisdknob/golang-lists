@@ -90,22 +90,6 @@ func (l *CoarseList) Remove(item int) bool {
 	return false
 }
 
-//Count is
-func (l *CoarseList) Count() (num int) {
-	num = 0
-	last := l.head
-	for {
-		if last.next == nil {
-			break
-		} else {
-			num++
-			last = last.next
-		}
-	}
-	num--
-	return
-}
-
 // NewCoarseList is
 func NewCoarseList() (l *CoarseList) {
 	head := Node{

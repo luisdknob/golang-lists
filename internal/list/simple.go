@@ -63,22 +63,6 @@ func (l *SimpleList) Remove(item int) bool {
 	return false
 }
 
-//Count is
-func (l *SimpleList) Count() (num int) {
-	num = 0
-	last := l.head
-	for {
-		if last.next == nil {
-			break
-		} else {
-			num++
-			last = last.next
-		}
-	}
-	num--
-	return
-}
-
 // NewSimpleList is
 func NewSimpleList() (l *SimpleList) {
 	head := Node{

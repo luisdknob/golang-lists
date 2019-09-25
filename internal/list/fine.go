@@ -87,22 +87,6 @@ func (l *FineList) Contains(item int) bool {
 	return false
 }
 
-// Count is
-func (l *FineList) Count() (num int) {
-	num = 0
-	last := l.head
-	for {
-		if last.next == nil {
-			break
-		} else {
-			num++
-			last = last.next
-		}
-	}
-	num--
-	return
-}
-
 // NewFineList is
 func NewFineList() (l *FineList) {
 	head := MuxNode{

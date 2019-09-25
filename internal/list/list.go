@@ -22,9 +22,10 @@ type MuxNode struct {
 	mux  sync.Mutex
 }
 
-// RWMuxNode is
-type RWMuxNode struct {
-	item int
-	next *RWMuxNode
-	mux  sync.RWMutex
+// MarkedNode is
+type MarkedNode struct {
+	item   int
+	next   *MarkedNode
+	marked bool
+	mux    sync.Mutex
 }

@@ -1,24 +1,17 @@
 package list
 
-// OptimisticList definition with Mutex
-type OptimisticList struct {
-	head *MuxNode
+// LazyList definition with Mutex
+type LazyList struct {
+	head *MarkedNode
 }
 
-func (l *OptimisticList) validate(pred *MuxNode, curr *MuxNode) bool {
-	node := l.head
-	for node.item <= pred.item {
-		if node == pred {
-			return pred.next == curr
-		}
-		node = node.next
-	}
-	return false
+func (l *LazyList) validate(pred *MarkedNode, curr *MarkedNode) bool {
+	return !pred.marked && !curr.marked && pred.next == curr
 }
 
 // Add is
-func (l *OptimisticList) Add(item int) bool {
-	var pred, curr *MuxNode
+func (l *LazyList) Add(item int) bool {
+	var pred, curr *MarkedNode
 
 	for {
 		pred = l.head
@@ -35,7 +28,7 @@ func (l *OptimisticList) Add(item int) bool {
 				curr.mux.Unlock()
 				return false
 			}
-			node := &MuxNode{
+			node := &MarkedNode{
 				item: item,
 			}
 			node.next = curr
@@ -50,30 +43,21 @@ func (l *OptimisticList) Add(item int) bool {
 }
 
 // Contains is
-func (l *OptimisticList) Contains(item int) bool {
+func (l *LazyList) Contains(item int) bool {
 	for {
-		pred := l.head
-		curr := pred.next
+		curr := l.head
 
-		for curr.item <= item {
-			pred = curr
+		for curr.item < item {
 			curr = curr.next
 		}
-		pred.mux.Lock()
-		curr.mux.Lock()
-		if l.validate(pred, curr) {
-			pred.mux.Unlock()
-			curr.mux.Unlock()
-			return curr.item == item
-		}
-		pred.mux.Unlock()
-		curr.mux.Unlock()
+
+		return curr.item == item && !curr.marked
 	}
 }
 
 // Remove is
-func (l *OptimisticList) Remove(item int) bool {
-	var pred, curr *MuxNode
+func (l *LazyList) Remove(item int) bool {
+	var pred, curr *MarkedNode
 
 	for {
 		pred = l.head
@@ -90,6 +74,7 @@ func (l *OptimisticList) Remove(item int) bool {
 				curr.mux.Unlock()
 				return false
 			}
+			curr.marked = true
 			pred.next = curr.next
 			pred.mux.Unlock()
 			curr.mux.Unlock()
@@ -100,15 +85,15 @@ func (l *OptimisticList) Remove(item int) bool {
 	}
 }
 
-// NewOptimisticList is
-func NewOptimisticList() (l *OptimisticList) {
-	head := MuxNode{
+// NewLazyList is
+func NewLazyList() (l *LazyList) {
+	head := MarkedNode{
 		item: 0,
-		next: &MuxNode{
+		next: &MarkedNode{
 			item: int(^uint(0) >> 1),
 		},
 	}
-	l = &OptimisticList{
+	l = &LazyList{
 		head: &head,
 	}
 	return

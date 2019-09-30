@@ -5,7 +5,7 @@ type OptimisticList struct {
 	head *MuxNode
 }
 
-func (l *OptimisticList) validate(pred *MuxNode, curr *MuxNode) bool {
+func (l *OptimisticList) validate(pred, curr *MuxNode) bool {
 	node := l.head
 	for node.item <= pred.item {
 		if node == pred {

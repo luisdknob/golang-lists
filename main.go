@@ -71,25 +71,29 @@ func exec(l list.List, initialSize int, operations int, threads int) {
 func main() {
 
 	fmt.Printf("alg;exp;threads;add;remove;contains;duration;ops;miss;total\n")
-	for y := 0; y <= 29; y++ {
+	for y := 0; y <= 0; y++ {
 
 		for x := 1; x <= 3; x = x + 1 {
 			threads := int(math.Pow(2.0, float64(x)))
 			lC := list.NewCoarseList()
-			fmt.Printf("CG;%d;%d", y, threads)
+			fmt.Printf("Coarse;%d;%d", y, threads)
 			exec(lC, 100000, 100000, threads)
 
 			lF := list.NewFineList()
-			fmt.Printf("FG;%d;%d", y, threads)
+			fmt.Printf("Fine;%d;%d", y, threads)
 			exec(lF, 100000, 100000, threads)
 
 			lO := list.NewOptimisticList()
-			fmt.Printf("OP;%d;%d", y, threads)
+			fmt.Printf("Optimistic;%d;%d", y, threads)
 			exec(lO, 100000, 100000, threads)
 
 			lL := list.NewLazyList()
-			fmt.Printf("LA;%d;%d", y, threads)
+			fmt.Printf("Lazy;%d;%d", y, threads)
 			exec(lL, 100000, 100000, threads)
+
+			lN := list.NewNonBlockingList()
+			fmt.Printf("LockFree;%d;%d", y, threads)
+			exec(lN, 100000, 100000, threads)
 		}
 	}
 }

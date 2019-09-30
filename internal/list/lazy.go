@@ -5,7 +5,7 @@ type LazyList struct {
 	head *MarkedNode
 }
 
-func (l *LazyList) validate(pred *MarkedNode, curr *MarkedNode) bool {
+func (l *LazyList) validate(pred, curr *MarkedNode) bool {
 	return !pred.marked && !curr.marked && pred.next == curr
 }
 

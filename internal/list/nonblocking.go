@@ -16,7 +16,7 @@ type NonBlockingList struct {
 //LockFreeNode is ...
 type LockFreeNode struct {
 	markableNext *MarkablePointer
-	object       unsafe.Pointer
+	item         int
 }
 
 //MarkablePointer is ..
@@ -27,15 +27,13 @@ type MarkablePointer struct {
 
 // NewNonBlockingList is
 func NewNonBlockingList() (l *NonBlockingList) {
-	headValue := 0
-	tailValue := int(^uint(0) >> 1)
 
 	head := LockFreeNode{
-		object: unsafe.Pointer(&headValue),
+		item: 0,
 		markableNext: &MarkablePointer{
 			marked: false,
 			next: &LockFreeNode{
-				object: unsafe.Pointer(&tailValue),
+				item: int(^uint(0) >> 1),
 			},
 		},
 	}
@@ -51,7 +49,7 @@ func (l *NonBlockingList) Print() {
 	curr := l.head
 
 	for {
-		fmt.Println(*(*int)(curr.object))
+		fmt.Println(curr.item)
 		if curr.markableNext != nil {
 			curr = curr.markableNext.next
 		} else {
@@ -61,14 +59,15 @@ func (l *NonBlockingList) Print() {
 
 }
 
-func (l *NonBlockingList) deleteObject(object unsafe.Pointer) bool {
+// Remove is
+func (l *NonBlockingList) Remove(item int) bool {
 	var previous *LockFreeNode
 	cursor := l.head
 	for {
 		if cursor == nil {
 			break
 		}
-		if *(*int)(cursor.object) == *(*int)(object) {
+		if cursor.item == item {
 			nextNode := cursor.markableNext.next
 			newNext := MarkablePointer{
 				marked: true,
@@ -80,7 +79,7 @@ func (l *NonBlockingList) deleteObject(object unsafe.Pointer) bool {
 				unsafe.Pointer(&newNext),
 			)
 			if !operationSucceeded {
-				l.deleteObject(object)
+				l.Remove(item)
 				return true
 			}
 			newNext = MarkablePointer{
@@ -94,10 +93,10 @@ func (l *NonBlockingList) deleteObject(object unsafe.Pointer) bool {
 				)
 			}
 			if !operationSucceeded {
-				l.deleteObject(object)
+				l.Remove(item)
 			}
 			break
-		} else if *(*int)(cursor.object) > *(*int)(object) {
+		} else if cursor.item > item {
 			return false
 		}
 
@@ -110,19 +109,20 @@ func (l *NonBlockingList) deleteObject(object unsafe.Pointer) bool {
 	return true
 }
 
-func (l *NonBlockingList) insertObject(object unsafe.Pointer) bool {
+// Add is
+func (l *NonBlockingList) Add(item int) bool {
 	cursor := l.head
 	for {
-		if *(*int)(object) < *(*int)(cursor.markableNext.next.object) {
+		if item < cursor.markableNext.next.item {
 			currentNext := cursor.markableNext
 			if currentNext.marked {
 				continue
 			}
-			if *(*int)(cursor.object) == *(*int)(object) {
+			if cursor.item == item {
 				return false
 			}
 			newNode := LockFreeNode{
-				object: object,
+				item: item,
 				markableNext: &MarkablePointer{
 					next: currentNext.next,
 				},
@@ -136,7 +136,7 @@ func (l *NonBlockingList) insertObject(object unsafe.Pointer) bool {
 				unsafe.Pointer(&newNext),
 			)
 			if !operationSucceeded {
-				l.insertObject(object)
+				l.Add(item)
 				return true
 			}
 			break
@@ -146,25 +146,13 @@ func (l *NonBlockingList) insertObject(object unsafe.Pointer) bool {
 	return true
 }
 
-// Add is
-func (l *NonBlockingList) Add(item int) bool {
-	object := unsafe.Pointer(&item)
-	return l.insertObject(object)
-}
-
 // Contains is
 func (l *NonBlockingList) Contains(item int) bool {
 	curr := l.head
 	marked := false
-	for *(*int)(curr.object) < item {
+	for curr.item < item {
 		marked = curr.markableNext.marked
 		curr = curr.markableNext.next
 	}
-	return *(*int)(curr.object) == item && !marked
-}
-
-// Remove is
-func (l *NonBlockingList) Remove(item int) bool {
-	object := unsafe.Pointer(&item)
-	return l.deleteObject(object)
+	return curr.item == item && !marked
 }

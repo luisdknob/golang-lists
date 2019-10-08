@@ -2,14 +2,23 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"math/rand"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"./internal/list"
+	"github.com/tkanos/gonfig"
 )
+
+// Configuration is ..
+type Configuration struct {
+	InitialSize int
+	Operations  int
+	Threads     int
+	Jump        int
+	Experiments int
+}
 
 func exec(l list.List, initialSize int, operations int, threads int) {
 
@@ -71,30 +80,36 @@ func exec(l list.List, initialSize int, operations int, threads int) {
 
 func main() {
 
+	configuration := Configuration{}
+	err := gonfig.GetConf("config.json", &configuration)
+	if err != nil {
+		fmt.Println("Config file not found |", err)
+		return
+	}
+
 	fmt.Printf("alg;exp;threads;add;remove;contains;duration;ops;miss;total\n")
-	for y := 0; y <= 4; y++ {
+	for y := 0; y < configuration.Experiments; y++ {
 
-		for x := 1; x <= 3; x = x + 1 {
-			threads := int(math.Pow(2.0, float64(x)))
-			//lC := list.NewCoarseList()
-			//fmt.Printf("Coarse;%d;%d", y, threads)
-			//exec(lC, 100000, 100000, threads)
+		for x := 2; x <= configuration.Threads; x = x + configuration.Jump {
+			lC := list.NewCoarseList()
+			fmt.Printf("Coarse;%d;%d", y, x)
+			exec(lC, configuration.InitialSize, configuration.Operations, x)
 
-			//lF := list.NewFineList()
-			//fmt.Printf("Fine;%d;%d", y, threads)
-			//exec(lF, 100000, 100000, threads)
+			lF := list.NewFineList()
+			fmt.Printf("Fine;%d;%d", y, x)
+			exec(lF, configuration.InitialSize, configuration.Operations, x)
 
-			//lO := list.NewOptimisticList()
-			//fmt.Printf("Optimistic;%d;%d", y, threads)
-			//exec(lO, 100000, 100000, threads)
+			lO := list.NewOptimisticList()
+			fmt.Printf("Optimistic;%d;%d", y, x)
+			exec(lO, configuration.InitialSize, configuration.Operations, x)
 
-			//lL := list.NewLazyList()
-			//fmt.Printf("Lazy;%d;%d", y, threads)
-			//exec(lL, 100000, 100000, threads)
+			lL := list.NewLazyList()
+			fmt.Printf("Lazy;%d;%d", y, x)
+			exec(lL, configuration.InitialSize, configuration.Operations, x)
 
 			lN := list.NewNonBlockingList()
-			fmt.Printf("LockFree;%d;%d", y, threads)
-			exec(lN, 100000, 100000, threads)
+			fmt.Printf("LockFree;%d;%d", y, x)
+			exec(lN, configuration.InitialSize, configuration.Operations, x)
 		}
 	}
 }

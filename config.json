@@ -1,0 +1,7 @@
+{
+    "InitialSize":100000,
+	"Operations":100000,
+	"Threads":48,
+	"Jump":2,
+	"Experiments": 2
+}
